@@ -1,0 +1,13 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+
+# Dataset in ./data (a folder, or a link to a copy; see README, Data)
+data
+data/
+
+# Training outputs written by main.py
+Results/
+
+# Slurm job logs
+slurm*.out
