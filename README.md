@@ -1,8 +1,8 @@
 # MonarchGRU: low-footprint recurrent neural network for keyword spotting
 
-MonarchGRU is a **29K-parameter** recurrent neural network for **always-on** keyword spotting on IoT
-devices. It replaces most GRU weight matrices with Monarch matrices, which with 4 blocks need half the
-weights and multiply-accumulates (MACs) of a dense matrix.
+MonarchGRU is a compact recurrent neural network for **always-on** keyword spotting on IoT devices. It
+replaces most GRU weight matrices with Monarch matrices, which with 4 blocks need half the weights and
+multiply-accumulates (MACs) of a dense matrix.
 
 **[AICAS'26][AICAS26] | DOI: coming soon | [Citation](#citation)**
 
@@ -12,6 +12,8 @@ Soujanya Bhowmick<sup>1</sup>, Sangyeob Kim<sup>2</sup>, Qinyu Chen<sup>3</sup>,
 <sup>1</sup>Aalto University, Finland &nbsp; <sup>2</sup>Yonsei University, South Korea &nbsp;
 <sup>3</sup>Leiden University, The Netherlands &nbsp; <sup>4</sup>TU Delft, The Netherlands<br>
 <sup>&#42;</sup>Corresponding author
+
+This work was recognized with a **2026 IEEE CASS Student Travel Grant** (Flagship Conferences) for AICAS 2026.
 
 <p align="center">
   <img src="assets/system_overview.jpg" width="460" alt="MonarchGRU keyword-spotting pipeline: log-Mel features with deltas, two MonarchGRU layers with batch and layer normalization, and a 12-class output layer">
