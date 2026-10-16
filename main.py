@@ -179,7 +179,7 @@ def set_all_seeds(seed):
 class Trainer:
     def __init__(self):
         """Parse configuration and initialize the model, data, and optimizer."""
-        # allow_abbrev=False: only exact flag names are accepted, so a typo or an old name fails loudly.
+        # allow_abbrev=False: only exact flag names are accepted, so a typo fails loudly.
         parser = argparse.ArgumentParser(
             description='Train and evaluate the MonarchGRU keyword spotter (Google Speech Commands, 12 classes).',
             allow_abbrev=False)
@@ -244,7 +244,7 @@ class Trainer:
         model.add_argument('--scale_recurrent_ln', action='store_true',
                            help='Multiply the recurrent LayerNorm output by --bn_init_scale for the whole run (a '
                                 'fixed factor, 0 parameters), so that with --norm dual both paths start at the same '
-                                'size. With --norm rec_ln (no BatchNorm) it only scales the recurrent path down; with '
+                                'size. With --norm rec_ln (no BatchNorm) it only scales the recurrent path; with '
                                 '--norm none it has no effect.')
         model.add_argument('--bn_init_scale_gates', type=float, nargs=3, default=None, metavar=('R', 'Z', 'N'),
                            help='Starting BatchNorm scales of the reset, update and candidate gates, one each '
@@ -449,8 +449,9 @@ class Trainer:
                               'recomputed, is the EMA candidate instead of the last epoch '
                               '(Morales-Brotons et al., TMLR 2024). One extra validation pass per epoch.')
         avg.add_argument('--use_swa', action='store_true',
-                         help='Stochastic Weight Averaging, one snapshot per epoch. It is tested instead of the best '
-                              'epoch, even with a lower validation accuracy (see --use_ema).')
+                         help='Stochastic Weight Averaging, one snapshot per epoch. It is chosen over the best epoch '
+                              'even with a lower validation accuracy, but over the EMA only if it scores higher (see '
+                              '--use_ema).')
         avg.add_argument('--swa_start_frac', type=float, default=0.75,
                          help='Start SWA at this fraction of training (default 0.75).')
         avg.add_argument('--avg_topk', type=int, default=0,
@@ -787,8 +788,8 @@ class Trainer:
         else:
             self.nblocks_list = [self.nblocks] * self.num_layers
         if any(blocks < 4 for blocks in self.nblocks_list):
-            parser.error(f'--nblocks/--nblocks_per_layer must be at least 4 (use 4, 8 or 16): this code trains only '
-                         f'Monarch matrices with at most half the weights of a dense one (2*h*h/nblocks); '
+            parser.error(f'--nblocks/--nblocks_per_layer must be at least 4 (use 4, 8 or 16), so that each Monarch '
+                         f'matrix has at most half the weights of a dense one (2*h*h/nblocks); '
                          f'got {self.nblocks_list}')
         if any(self.hidden_size % blocks for blocks in self.nblocks_list):
             parser.error(f'--hidden_size {self.hidden_size} must be divisible by every nblocks; '
@@ -1661,10 +1662,13 @@ class Trainer:
                 handle.flush()
                 os.fsync(handle.fileno())
             # The temporary file is created readable by its owner only; give it the umask permissions of the
-            # other outputs.
+            # other outputs, where the filesystem allows it (some network mounts refuse chmod).
             umask = os.umask(0)
             os.umask(umask)
-            temporary_path.chmod(0o666 & ~umask)
+            try:
+                temporary_path.chmod(0o666 & ~umask)
+            except OSError:
+                pass
             # Publish the complete file atomically, without replacing an existing result.
             try:
                 os.link(temporary_path, result_path)

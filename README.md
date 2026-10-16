@@ -119,6 +119,11 @@ The download runs at the start of the first training run, so the machine it runs
 compute node) needs internet access. Start other training runs only after that run has printed
 `Download and 12-class split finished.`; until then the 12-class split is incomplete.
 
+If the compute nodes have no internet access, start the training command once with `--download` on a
+machine that has it (for example a login node). It downloads the data and then starts training, so stop
+it with Ctrl+C after it has printed `Download and 12-class split finished.`, and then train without
+`--download`.
+
 Use `--download` only once: each time, it deletes `data/speech_commands_v0.02` and
 `data/speech_commands_test_set_v0.02` and downloads them again. If you already have the data in this
 layout, link it instead: `ln -s /path/to/data data` (`--download` refuses to run when `./data` is a link).
@@ -142,9 +147,9 @@ To only measure the pretrained model's test accuracy, the test set alone is enou
   ```
   Replace `my_run` with a new name for every run. One epoch takes about 2 to 4 minutes on a V100, so the
   1000 epochs take about 1.5 to 3 days; the run needs up to about 35 GB of host memory. On a Slurm
-  cluster, `sbatch submit_mn4.sh` runs the same
-  command with the Slurm job ID as the run name; add `--download` to it for the first job only (see
-  [Data](#data) before you submit more jobs), and adjust its partition and module lines for your cluster.
+  cluster, `sbatch submit_mn4.sh` runs the same command with the Slurm job ID as the run name; if the
+  compute nodes have internet access, add `--download` to it for the first job only (see [Data](#data)
+  before you submit more jobs), and adjust its partition and module lines for your cluster.
 
 - The results are saved in `Results/my_run/`:
   - `gru.pt`: weights of the epoch with the best validation accuracy. `gru_last.pt`: weights after the
@@ -176,7 +181,7 @@ runs on the GPU, or on the CPU if there is no GPU.
   The classes are `yes no up down left right on off stop go`, `_unknown_` and `_silence_`.
 
 - Measure the accuracy on the official test set. This needs only the test set (113 MB), not the full
-  dataset; skip the download steps if you already ran `--download` (see [Data](#data)):
+  dataset; skip the download steps if you already have the test set in `./data` (see [Data](#data)):
   ```sh
   mkdir -p data/speech_commands_test_set_v0.02
   cd data/speech_commands_test_set_v0.02

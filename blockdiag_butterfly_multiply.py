@@ -14,7 +14,7 @@ Index convention:
 
 Reinterpreting ik*q + iq as ir*l + il implements the fixed permutation.
 The preallocated out= buffers bypass autocast; mixed precision is unsupported.
-Backward is first-order only; create_graph=True raises an error.
+Backward is first-order only; double backward (create_graph=True) is unsupported.
 """
 import math
 
@@ -62,9 +62,6 @@ class BlockdiagButterflyMultiply(torch.autograd.Function):
 
     @staticmethod
     def backward(ctx, dout):
-        if torch.is_grad_enabled():  # True here only for backward with create_graph=True
-            raise RuntimeError("blockdiag_butterfly_multiply supports first-order gradients only; "
-                               "create_graph=True (double backward) is not supported")
         x, w1_bfly, w2_bfly, out1 = ctx.saved_tensors
         batch_shape, n = x.shape[:-1], x.shape[-1]
         batch_dim = math.prod(batch_shape)

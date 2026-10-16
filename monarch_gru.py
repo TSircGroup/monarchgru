@@ -134,8 +134,8 @@ class Monarch_GRU(nn.Module):
 
         if use_monarch_for_w and not self.w_is_monarch:
             print(f"  WARNING: nblocks={nblocks} does not divide input_dim={input_dim}, so the "
-                  f"input weights W use a dense nn.Linear while the recurrent weights U stay "
-                  f"Monarch. Pick an input size divisible by nblocks for a fully Monarch cell.")
+                  f"input weights W use a dense nn.Linear. Pick an input size divisible by nblocks "
+                  f"for Monarch input weights.")
 
         # Feedforward BN supplies the gate biases.
         linear_bias = (ff_norm == 'none')
@@ -354,7 +354,7 @@ class Monarch_GRU_Classifier(nn.Module):
 
         norm_str = " + BN+LN" if use_batch_norm else (" + RecurrentLN" if use_layer_norm else "")
         print("\n" + "=" * 60)
-        print(f"  MONARCH GRU (b={nblocks}{norm_str})")
+        print(f"  MonarchGRU (b={nblocks}{norm_str})")
         print("=" * 60)
         print(f"  Input dim:   {input_dim}")
         print(f"  Hidden dim:  {hidden_dim}")
@@ -420,7 +420,7 @@ class Monarch_GRU_Classifier(nn.Module):
 
         A local CPU generator isolates the experiment from global RNG state.
         Recurrent factors, biases, normalization, and classifier stay unchanged.
-        Call before constructing the optimizer for a fresh training experiment.
+        Call before constructing the optimizer.
         """
         if isinstance(seed, bool) or not isinstance(seed, Integral):
             raise ValueError(f"seed must be an integer, got {seed!r}")

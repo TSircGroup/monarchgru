@@ -58,7 +58,7 @@ def build_model(checkpoint, device):
     # --input_norm is recognized by its saved input mean.
     try:
         state = torch.load(checkpoint, map_location=device, weights_only=True)
-    except RuntimeError as err:
+    except (RuntimeError, PermissionError) as err:
         sys.exit(f"cannot load {checkpoint}: {err}")
     except (EOFError, OSError, ValueError, pickle.UnpicklingError) as err:
         sys.exit(f"cannot load {checkpoint} ({type(err).__name__}); is it a complete PyTorch checkpoint?")
@@ -89,13 +89,15 @@ def predict(model, preprocess, paths, device):
         except (OSError, RuntimeError, ValueError) as err:
             if "No audio frames were decoded" in str(err):  # the decoder's message for a WAV file with 0 samples
                 err = "the file has no audio samples"
+            elif "The best audio stream is unknown" in str(err):  # the decoder found no readable audio stream
+                err = "the file has no audio stream the decoder can read; is it a valid WAV file?"
             print(f"{path}: skipped ({err})", file=sys.stderr)
             skipped += 1
             continue
         probs = model(features(preprocess, wave)).softmax(dim=-1)[0]
         if not torch.isfinite(probs).all():
-            print(f"{path}: skipped (NaN or infinite model output; the clip or the checkpoint contains NaN or "
-                  "infinite values)", file=sys.stderr)
+            print(f"{path}: skipped (NaN or infinite model output; the clip or the checkpoint probably contains "
+                  "NaN, infinite or out-of-range values)", file=sys.stderr)
             skipped += 1
             continue
         best = probs.argmax().item()
@@ -144,6 +146,8 @@ def main():
         torch.empty(0, device=args.device)
     except Exception:  # torch raises different errors for a misspelled device and for one this machine lacks
         parser.error(f"--device {args.device} cannot be used on this machine (use cpu, or cuda with a GPU)")
+    if args.device.startswith("cpu:"):  # torch.load cannot map the weights to cpu:N
+        parser.error(f"--device {args.device} is not supported; use --device cpu")
     check_run_settings(args.checkpoint)
 
     device = torch.device(args.device)
