@@ -16,9 +16,6 @@ Soujanya Bhowmick<sup>1</sup>, Sangyeob Kim<sup>2</sup>, Qinyu Chen<sup>3</sup>,
 <p align="center">
   <img src="assets/system_overview.jpg" width="460" alt="MonarchGRU keyword-spotting pipeline: log-Mel features with deltas, two MonarchGRU layers with batch and layer normalization, and a 12-class output layer">
   <br><em>Keyword spotting with MonarchGRU. Fig. 1 of the paper, © 2026 IEEE.</em>
-  <br><em>In this code, Δ is computed over 5 frames as (x<sub>t+1</sub> − x<sub>t−1</sub> +
-  2(x<sub>t+2</sub> − x<sub>t−2</sub>)) / 10, and the layer-1 input weights are dense
-  (<code>--dense_input_layer1</code>, the default).</em>
 </p>
 
 ---
